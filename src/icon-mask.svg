@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Scrub">
+    <title>Scrub</title>
+    <!-- A scrubbing brush over the clean streak it has just left.
+
+         Drawn upright and then tilted as one group, so the block and the bristles stay square to
+         each other — a brush whose bristles don't meet its block at a right angle reads as a broom.
+
+         `currentColor` throughout and no background plate: the control panel paints this as a
+         single-colour mask, so anything relying on a second tone disappears. -->
+    <g transform="rotate(-12 50 50)">
+        <!-- The block. Solid rather than outlined: at 16px an outline fills in anyway, and solid
+             keeps the silhouette honest at both sizes. -->
+        <rect x="16" y="26" width="68" height="22" rx="10" fill="currentColor"/>
+        <!-- Bristles. Four, evenly spaced — three reads as a fork, five as a comb. -->
+        <g stroke="currentColor" stroke-width="7" stroke-linecap="round">
+            <path d="M29 50 v18"/>
+            <path d="M43 50 v18"/>
+            <path d="M57 50 v18"/>
+            <path d="M71 50 v18"/>
+        </g>
+    </g>
+    <!-- The streak. Full width, so the mark reads as *scrubbing* rather than as a hairbrush. -->
+    <rect x="8" y="82" width="84" height="9" rx="4.5" fill="currentColor"/>
+</svg>

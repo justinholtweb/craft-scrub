@@ -1,0 +1,80 @@
+{# The scope fields, shared by the Replace screen and the rule editor.
+
+   One list of sources rather than a picker per element type. The alternative — a sections control,
+   a volumes control and a groups control, each appearing and disappearing as the element type
+   checkboxes change — is six widgets to express what is nearly always one sentence. #}
+
+{% import "_includes/forms" as forms %}
+
+{% set scope = rule.scope %}
+
+{{ forms.checkboxGroupField({
+    label: "Element types"|t('scrub'),
+    name: name ~ '[scope][elementTypes]',
+    options: elementTypeOptions,
+    values: scope.elementTypes,
+    instructions: "Leave every box unticked to search all of them."|t('scrub'),
+}) }}
+
+{% set sourceOptions = [] %}
+{% for group, options in sourceGroups %}
+    {% set sourceOptions = sourceOptions|merge([{ optgroup: group }])|merge(options) %}
+{% endfor %}
+
+{% if sourceOptions|length %}
+    {{ forms.multiselectField({
+        label: "Sources"|t('scrub'),
+        name: name ~ '[scope][sourceKeys]',
+        options: sourceOptions,
+        values: scope.sourceKeys,
+        instructions: "Sections, volumes and groups. Nothing selected means all of them. Matrix and content blocks are matched by the entry that owns them."|t('scrub'),
+        class: 'fullwidth',
+    }) }}
+{% endif %}
+
+{{ forms.multiselectField({
+    label: "Fields"|t('scrub'),
+    name: name ~ '[scope][fieldHandles]',
+    options: fieldOptions,
+    values: scope.fieldHandles,
+    instructions: "Nothing selected means the title and every field."|t('scrub'),
+    class: 'fullwidth',
+}) }}
+
+{% if siteOptions|length > 1 %}
+    {{ forms.checkboxGroupField({
+        label: "Sites"|t('scrub'),
+        name: name ~ '[scope][siteIds]',
+        options: siteOptions,
+        values: scope.siteIds,
+        instructions: "Each site's copy is searched and replaced separately, so translations aren't overwritten."|t('scrub'),
+    }) }}
+{% endif %}
+
+{{ forms.textField({
+    label: "Only these element IDs"|t('scrub'),
+    name: name ~ '[scope][elementIds]',
+    value: scope.elementIds|join(', '),
+    placeholder: '12, 4021, 88',
+    instructions: "Optional. Narrows everything above to a specific list."|t('scrub'),
+}) }}
+
+{{ forms.checkboxField({
+    label: "Include drafts"|t('scrub'),
+    name: name ~ '[scope][includeDrafts]',
+    checked: scope.includeDrafts,
+    instructions: "A draft is somebody's unfinished work. Rewriting it shows up in their change list as an edit they didn't make."|t('scrub'),
+}) }}
+
+{{ forms.checkboxField({
+    label: "Include revisions"|t('scrub'),
+    name: name ~ '[scope][includeRevisions]',
+    checked: scope.includeRevisions,
+    instructions: "A revision records what the content was. Editing one doesn't correct history — it falsifies it. Craft's own utility does this and can't be told not to."|t('scrub'),
+}) }}
+
+{{ forms.checkboxField({
+    label: "Include trashed elements"|t('scrub'),
+    name: name ~ '[scope][includeTrashed]',
+    checked: scope.includeTrashed,
+}) }}

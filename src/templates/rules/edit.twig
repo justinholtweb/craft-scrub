@@ -1,0 +1,176 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = isNew ? "New rule"|t('scrub') : rule.name %}
+{% set selectedSubnavItem = 'rules' %}
+{% set crumbs = [{ label: "Rules"|t('scrub'), url: url('scrub/rules') }] %}
+{% set fullPageForm = true %}
+
+{% set modeOptions = [
+    { label: "Plain text"|t('scrub'), value: 'plain' },
+    { label: "Whole words only"|t('scrub'), value: 'word' },
+    { label: "Regular expression"|t('scrub'), value: 'regex' },
+] %}
+
+{% block content %}
+    {% include "scrub/_partials/style" %}
+
+    {{ actionInput('scrub/rules/save') }}
+    {{ redirectInput('scrub/rules') }}
+    {% if rule.id %}<input type="hidden" name="rule[id]" value="{{ rule.id }}">{% endif %}
+
+    <div class="scrub-panel">
+        {{ forms.textField({
+            label: "Name"|t('scrub'),
+            name: 'rule[name]',
+            value: rule.name,
+            required: true,
+            errors: rule.getErrors('name'),
+        }) }}
+
+        {{ forms.textField({
+            label: "Handle"|t('scrub'),
+            name: 'rule[handle]',
+            value: rule.handle,
+            class: 'code',
+            instructions: "Optional. Lets the rule be run from the console and applied in a template with {{ text|scrub('handle') }}."|t('scrub'),
+            errors: rule.getErrors('handle'),
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Enabled"|t('scrub'),
+            name: 'rule[enabled]',
+            on: rule.enabled,
+        }) }}
+    </div>
+
+    <div class="scrub-panel">
+        <h2>{{ "What to change"|t('scrub') }}</h2>
+
+        {{ forms.textareaField({
+            label: "Find"|t('scrub'),
+            name: 'rule[find]',
+            value: rule.find,
+            rows: 2,
+            class: 'scrub-mono',
+            required: true,
+            errors: rule.getErrors('find'),
+        }) }}
+
+        {{ forms.textareaField({
+            label: "Replace with"|t('scrub'),
+            name: 'rule[replace]',
+            value: rule.replace,
+            rows: 2,
+            class: 'scrub-mono',
+        }) }}
+
+        {{ forms.selectField({
+            label: "Match"|t('scrub'),
+            name: 'rule[mode]',
+            options: modeOptions,
+            value: rule.mode,
+        }) }}
+
+        {{ forms.checkboxField({ label: "Case sensitive"|t('scrub'), name: 'rule[caseSensitive]', checked: rule.caseSensitive }) }}
+        {{ forms.checkboxField({ label: "Keep the original capitalisation"|t('scrub'), name: 'rule[preserveCase]', checked: rule.preserveCase }) }}
+        {{ forms.checkboxField({ label: "^ and $ match at line breaks"|t('scrub'), name: 'rule[multiline]', checked: rule.multiline }) }}
+        {{ forms.checkboxField({ label: ". matches line breaks"|t('scrub'), name: 'rule[dotAll]', checked: rule.dotAll }) }}
+    </div>
+
+    <div class="scrub-panel">
+        <h2>{{ "When it applies"|t('scrub') }}</h2>
+
+        {{ forms.checkboxField({
+            label: "Rewrite the site's output"|t('scrub'),
+            name: 'rule[realtime]',
+            checked: rule.realtime,
+            instructions: "Applied as pages render. Nothing stored is changed, so switching this off is the undo."|t('scrub'),
+        }) }}
+
+        {{ forms.textareaField({
+            label: "Only on these URIs"|t('scrub'),
+            name: 'rule[realtimeUris]',
+            value: rule.realtimeUris|join("\n"),
+            rows: 3,
+            class: 'scrub-mono',
+            instructions: "One per line. * is a wildcard — blog/*. Leave empty for the whole site. Never the control panel."|t('scrub'),
+        }) }}
+
+        {{ forms.checkboxField({
+            label: "Skip markup"|t('scrub'),
+            name: 'rule[realtimeHtmlAware]',
+            checked: rule.realtimeHtmlAware,
+            instructions: "Replaces only in text a reader sees, never inside a tag, attribute, script or stylesheet. Turning this off will break pages the first time a rule matches a class name."|t('scrub'),
+        }) }}
+
+        {{ forms.checkboxField({
+            label: "Apply to content as it's saved"|t('scrub'),
+            name: 'rule[onSave]',
+            checked: rule.onSave,
+            instructions: "New writing arrives already corrected. Runs before the save, so there's no extra revision and nothing to undo separately."|t('scrub'),
+        }) }}
+
+        {{ forms.selectField({
+            label: "Run on a schedule"|t('scrub'),
+            name: 'rule[cadence]',
+            options: [
+                { label: "Never"|t('scrub'), value: '' },
+                { label: "Daily"|t('scrub'), value: 'daily' },
+                { label: "Weekly"|t('scrub'), value: 'weekly' },
+                { label: "Monthly"|t('scrub'), value: 'monthly' },
+            ],
+            value: rule.cadence,
+            instructions: "Fired by `craft scrub/run/due`, which belongs in cron."|t('scrub'),
+        }) }}
+    </div>
+
+    <div class="scrub-panel">
+        <h2>{{ "Where to look"|t('scrub') }}</h2>
+
+        {% set targetOptions = [] %}
+        {% for handle, target in targets %}
+            {% set targetOptions = targetOptions|merge([{ label: target.label(), value: handle }]) %}
+        {% endfor %}
+
+        {{ forms.checkboxGroupField({
+            label: "Search in"|t('scrub'),
+            name: 'rule[targets]',
+            options: targetOptions,
+            values: rule.targets,
+            errors: rule.getErrors('targets'),
+        }) }}
+
+        {% include "scrub/_partials/scope" with {
+        name: 'rule',
+        rule: rule,
+        elementTypeOptions: elementTypeOptions,
+        sourceGroups: sourceGroups,
+        fieldOptions: fieldOptions,
+        siteOptions: siteOptions,
+    } only %}
+    </div>
+
+    {# Posted from JS, not from a nested <form>. This page is already a form: the browser drops the
+       inner <form> tag but keeps its children, so a hidden delete action would end up sitting in the
+       page form next to the save action — and with two of them, Craft takes the last one. Pressing
+       Save would delete the rule. #}
+    {% if not isNew %}
+        <div class="buttons">
+            <button type="button" class="btn delete" id="scrub-delete-rule">{{ "Delete"|t('scrub') }}</button>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% if not isNew %}
+    {% js %}
+    document.getElementById('scrub-delete-rule').addEventListener('click', function() {
+        if (!confirm(Craft.t('scrub', 'Delete this rule? Its history stays in place.'))) {
+            return;
+        }
+
+        Craft.sendActionRequest('POST', 'scrub/rules/delete', { data: { id: {{ rule.id }} } })
+            .then(function() { window.location.href = Craft.getCpUrl('scrub/rules'); });
+    });
+    {% endjs %}
+{% endif %}

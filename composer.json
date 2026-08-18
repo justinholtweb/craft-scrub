@@ -1,0 +1,74 @@
+{
+    "name": "justinholtweb/craft-scrub",
+    "description": "Find and replace text across a Craft site with a preview you can trust, scoping that stops at the content you meant, and an undo. Plus real-time rules that rewrite output without touching the database.",
+    "type": "craft-plugin",
+    "version": "5.0.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "scrub",
+        "find and replace",
+        "search and replace",
+        "regex",
+        "bulk edit",
+        "content",
+        "migration",
+        "rename"
+    ],
+    "license": "proprietary",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "authors": [
+        {
+            "name": "Justin Holt",
+            "homepage": "https://justinholt.com"
+        }
+    ],
+    "support": {
+        "docs": "https://craft-scrub.com/docs",
+        "source": "https://github.com/justinholtweb/craft-scrub",
+        "issues": "https://github.com/justinholtweb/craft-scrub/issues"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-pcre": "*",
+        "craftcms/cms": "^5.3.0"
+    },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/phpstan": "dev-main",
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "justinholtweb\\scrub\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "justinholtweb\\scrub\\tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "craftcms/plugin-installer": true,
+            "craftcms/generator": true
+        }
+    },
+    "extra": {
+        "name": "Scrub",
+        "handle": "scrub",
+        "developer": "Justin Holt",
+        "developerUrl": "https://justinholt.com",
+        "documentationUrl": "https://craft-scrub.com/docs",
+        "changelogUrl": "https://raw.githubusercontent.com/justinholtweb/craft-scrub/main/CHANGELOG.md",
+        "class": "justinholtweb\\scrub\\Plugin"
+    }
+}

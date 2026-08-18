@@ -1,0 +1,94 @@
+{# Small enough to inline. An asset bundle here would mean remembering to clear the CP resource
+   cache every time a rule changed, for about a hundred and fifty lines of CSS. #}
+{% css %}
+    .scrub-panel {
+        border: 1px solid var(--hairline-color, rgba(51, 64, 77, 0.1));
+        border-radius: var(--large-border-radius, 8px);
+        padding: 18px 20px;
+        margin-bottom: 20px;
+        background: var(--white, #fff);
+    }
+    .scrub-panel > h2:first-child { margin-top: 0; }
+    .scrub-tally {
+        display: flex;
+        gap: 32px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+    .scrub-n { font-size: 26px; line-height: 1.15; font-weight: 500; }
+    .scrub-l {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--medium-text-color, #606d7b);
+    }
+    .scrub-hit {
+        font-family: var(--mono-font, ui-monospace, Menlo, monospace);
+        font-size: 12px;
+        line-height: 1.7;
+        word-break: break-word;
+        padding: 3px 0;
+    }
+    .scrub-hit .ctx { color: var(--medium-text-color, #606d7b); }
+    .scrub-old {
+        background: color-mix(in srgb, var(--error-color, #cf1124) 14%, transparent);
+        text-decoration: line-through;
+        text-decoration-color: color-mix(in srgb, var(--error-color, #cf1124) 60%, transparent);
+        padding: 1px 2px;
+        border-radius: 2px;
+    }
+    .scrub-new {
+        background: color-mix(in srgb, var(--success-color, #00b660) 16%, transparent);
+        padding: 1px 2px;
+        border-radius: 2px;
+    }
+    .scrub-slot {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--medium-text-color, #606d7b);
+        margin: 10px 0 2px;
+    }
+    .scrub-unit {
+        border-top: 1px solid var(--hairline-color, rgba(51, 64, 77, 0.1));
+        padding: 12px 0;
+    }
+    .scrub-unit:first-of-type { border-top: 0; }
+    .scrub-unit h3 { margin: 0; font-size: 14px; }
+    .scrub-meta {
+        font-size: 12px;
+        color: var(--medium-text-color, #606d7b);
+    }
+    .scrub-notices { margin: 0 0 16px; padding: 0; list-style: none; }
+    .scrub-notices li {
+        position: relative;
+        padding: 6px 0 6px 26px;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+    .scrub-notices li::before {
+        content: '⚠';
+        position: absolute;
+        left: 4px;
+        top: 5px;
+        color: var(--pending-color, #ff9a00);
+    }
+    .scrub-notices.errors li::before { content: '⨯'; color: var(--error-color, #cf1124); }
+    .scrub-mono { font-family: var(--mono-font, ui-monospace, Menlo, monospace); font-size: 12px; }
+    .scrub-preview-empty {
+        color: var(--medium-text-color, #606d7b);
+        padding: 30px 0;
+        text-align: center;
+    }
+    .scrub-pro {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 1px solid currentColor;
+        border-radius: 3px;
+        padding: 0 4px;
+        margin-left: 6px;
+        opacity: 0.7;
+        vertical-align: 2px;
+    }
+{% endcss %}

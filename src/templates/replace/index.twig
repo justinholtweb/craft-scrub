@@ -1,0 +1,181 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = "Replace"|t('scrub') %}
+{% set selectedSubnavItem = 'replace' %}
+
+{% set modeOptions = [
+    { label: "Plain text"|t('scrub'), value: 'plain' },
+    { label: "Whole words only"|t('scrub'), value: 'word' },
+    { label: "Regular expression"|t('scrub') ~ (isPro ? '' : ' — Pro'), value: 'regex', disabled: not isPro },
+] %}
+
+{% block content %}
+    {% include "scrub/_partials/style" %}
+
+    <form id="scrub-form" method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('scrub/replace/run') }}
+        {{ redirectInput('scrub/runs') }}
+
+        <div class="scrub-panel">
+            <h2>{{ "What to change"|t('scrub') }}</h2>
+
+            {{ forms.textareaField({
+                label: "Find"|t('scrub'),
+                name: 'rule[find]',
+                value: rule.find,
+                rows: 2,
+                class: 'scrub-mono',
+                required: true,
+            }) }}
+
+            {{ forms.textareaField({
+                label: "Replace with"|t('scrub'),
+                name: 'rule[replace]',
+                value: rule.replace,
+                rows: 2,
+                class: 'scrub-mono',
+                instructions: "Leave empty to delete the text. In regular expression mode, $1 and $2 refer to capture groups."|t('scrub'),
+            }) }}
+
+            {{ forms.selectField({
+                label: "Match"|t('scrub'),
+                id: 'scrub-mode',
+                name: 'rule[mode]',
+                options: modeOptions,
+                value: rule.mode,
+            }) }}
+
+            {{ forms.checkboxField({
+                label: "Case sensitive"|t('scrub'),
+                name: 'rule[caseSensitive]',
+                checked: rule.caseSensitive,
+            }) }}
+
+            {{ forms.checkboxField({
+                label: "Keep the original capitalisation"|t('scrub') ~ (isPro ? '' : ' (Pro)'),
+                name: 'rule[preserveCase]',
+                checked: rule.preserveCase,
+                disabled: not isPro,
+                instructions: "“widget” becomes “gadget”, “Widget” becomes “Gadget”, “WIDGET” becomes “GADGET”. One rule instead of three."|t('scrub'),
+            }) }}
+
+            <div id="scrub-regex-flags"{% if rule.mode != 'regex' %} class="hidden"{% endif %}>
+                {{ forms.checkboxField({
+                    label: "^ and $ match at line breaks"|t('scrub'),
+                    name: 'rule[multiline]',
+                    checked: rule.multiline,
+                }) }}
+
+                {{ forms.checkboxField({
+                    label: ". matches line breaks"|t('scrub'),
+                    name: 'rule[dotAll]',
+                    checked: rule.dotAll,
+                }) }}
+            </div>
+        </div>
+
+        <div class="scrub-panel">
+            <h2>{{ "Where to look"|t('scrub') }}</h2>
+
+            {% set targetOptions = [] %}
+            {% for handle, target in targets %}
+                {% set targetOptions = targetOptions|merge([{
+                    label: target.label(),
+                    value: handle,
+                }]) %}
+            {% endfor %}
+
+            {{ forms.checkboxGroupField({
+                label: "Search in"|t('scrub'),
+                name: 'rule[targets]',
+                options: targetOptions,
+                values: rule.targets,
+            }) }}
+
+            <ul class="scrub-notices" style="list-style:none">
+                {% for handle, target in targets %}
+                    <li style="padding-left:0">
+                        <strong>{{ target.label() }}</strong>
+                        <span class="light">— {{ target.description() }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% include "scrub/_partials/scope" with {
+        name: 'rule',
+        rule: rule,
+        elementTypeOptions: elementTypeOptions,
+        sourceGroups: sourceGroups,
+        fieldOptions: fieldOptions,
+        siteOptions: siteOptions,
+    } only %}
+        </div>
+
+        <div class="scrub-panel" id="scrub-preview">
+            <div class="scrub-preview-empty">
+                {{ "Preview to see exactly what would change. Nothing is written until you do."|t('scrub') }}
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button type="button" class="btn submit" id="scrub-preview-btn">{{ "Preview"|t('scrub') }}</button>
+            {% if canReplace %}
+                <button type="submit" class="btn" id="scrub-run-btn" disabled>{{ "Replace"|t('scrub') }}</button>
+            {% endif %}
+            <div class="spinner hidden" id="scrub-spinner"></div>
+        </div>
+    </form>
+{% endblock %}
+
+{% js %}
+(function() {
+    var form = document.getElementById('scrub-form');
+    var panel = document.getElementById('scrub-preview');
+    var previewBtn = document.getElementById('scrub-preview-btn');
+    var runBtn = document.getElementById('scrub-run-btn');
+    var spinner = document.getElementById('scrub-spinner');
+    var mode = document.getElementById('scrub-mode');
+    var flags = document.getElementById('scrub-regex-flags');
+
+    if (mode && flags) {
+        mode.addEventListener('change', function() {
+            flags.classList.toggle('hidden', mode.value !== 'regex');
+        });
+    }
+
+    // Any edit to the form invalidates the preview, so the Replace button goes back to being
+    // unavailable. The server checks again anyway, but a button that stays enabled after you
+    // changed the search is a button that says the wrong thing.
+    form.addEventListener('input', function() {
+        if (runBtn) {
+            runBtn.disabled = true;
+        }
+    });
+
+    previewBtn.addEventListener('click', function() {
+        spinner.classList.remove('hidden');
+        previewBtn.classList.add('disabled');
+
+        Craft.sendActionRequest('POST', 'scrub/replace/preview', {
+            data: new FormData(form)
+        }).then(function(response) {
+            panel.innerHTML = response.data.html;
+            if (runBtn) {
+                runBtn.disabled = !response.data.canRun;
+                runBtn.textContent = response.data.queued
+                    ? Craft.t('scrub', 'Queue replacement')
+                    : Craft.t('scrub', 'Replace');
+            }
+        }).catch(function(error) {
+            panel.innerHTML = '<p class="error">' + Craft.escapeHtml(
+                (error.response && error.response.data && error.response.data.message) || 'Preview failed.'
+            ) + '</p>';
+        }).finally(function() {
+            spinner.classList.add('hidden');
+            previewBtn.classList.remove('disabled');
+        });
+    });
+})();
+{% endjs %}

@@ -1,0 +1,53 @@
+{% extends "_layouts/cp" %}
+
+{% set title = "History"|t('scrub') %}
+{% set selectedSubnavItem = 'runs' %}
+
+{% block content %}
+    {% include "scrub/_partials/style" %}
+
+    {% if runs is empty %}
+        <p class="scrub-preview-empty">{{ "Nothing has been replaced yet."|t('scrub') }}</p>
+    {% else %}
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ "What ran"|t('scrub') }}</th>
+                    <th class="thin">{{ "Status"|t('scrub') }}</th>
+                    <th class="thin">{{ "Changed"|t('scrub') }}</th>
+                    <th class="thin">{{ "Matches"|t('scrub') }}</th>
+                    <th>{{ "When"|t('scrub') }}</th>
+                    <th>{{ "Who"|t('scrub') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                    <tr>
+                        <td>
+                            <a href="{{ url('scrub/runs/' ~ run.id) }}">{# Single quotes: Twig reads `#{…}` inside a double-quoted string as interpolation, so a
+                               translation placeholder written that way is consumed before `|t` ever sees it. #}
+                            {{ run.summary ?? 'Run #{id}'|t('scrub', { id: run.id }) }}</a>
+                            {% if run.source != 'cp' %}<span class="light scrub-mono"> {{ run.source }}</span>{% endif %}
+                        </td>
+                        <td class="thin"><span class="status {{ run.statusColor() }}"></span>{{ run.statusLabel() }}</td>
+                        <td class="thin">{{ run.changed|number_format }}</td>
+                        <td class="thin">{{ run.hitCount|number_format }}</td>
+                        <td>{{ run.dateCreated ? run.dateCreated|datetime('short') }}</td>
+                        <td>{{ run.user() ? run.user().friendlyName : '—' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if total > perPage %}
+            <div class="buttons" style="margin-top:16px">
+                {% if page > 1 %}
+                    <a class="btn" href="{{ url('scrub/runs', { page: page - 1 }) }}">{{ "Newer"|t('scrub') }}</a>
+                {% endif %}
+                {% if page * perPage < total %}
+                    <a class="btn" href="{{ url('scrub/runs', { page: page + 1 }) }}">{{ "Older"|t('scrub') }}</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "_layouts/cp" %}
+
+{# Single quotes: `#{…}` in a double-quoted Twig string is interpolation, not a placeholder. #}
+{% set title = run.summary ?? 'Run #{id}'|t('scrub', { id: run.id }) %}
+{% set selectedSubnavItem = 'runs' %}
+{% set crumbs = [{ label: "History"|t('scrub'), url: url('scrub/runs') }] %}
+
+{% block content %}
+    {% include "scrub/_partials/style" %}
+
+    <div class="scrub-panel">
+        <div class="scrub-tally">
+            <div>
+                <div class="scrub-n"><span class="status {{ run.statusColor() }}"></span>{{ run.statusLabel() }}</div>
+                <div class="scrub-l">{{ run.dateCreated ? run.dateCreated|datetime('short') }}</div>
+            </div>
+            <div>
+                <div class="scrub-n">{{ run.hitCount|number_format }}</div>
+                <div class="scrub-l">{{ "replacements"|t('scrub') }}</div>
+            </div>
+            <div>
+                <div class="scrub-n">{{ run.changed|number_format }}</div>
+                <div class="scrub-l">{{ "places changed"|t('scrub') }}</div>
+            </div>
+            {% if run.failed %}
+                <div>
+                    <div class="scrub-n error">{{ run.failed|number_format }}</div>
+                    <div class="scrub-l">{{ "failed"|t('scrub') }}</div>
+                </div>
+            {% endif %}
+            <div>
+                <div class="scrub-n">{{ run.duration|number_format(2) }}s</div>
+                <div class="scrub-l">{{ "run by {who}"|t('scrub', { who: run.user() ? run.user().friendlyName : 'the system' }) }}</div>
+            </div>
+        </div>
+
+        {% if run.rule %}
+            <p class="scrub-meta">
+                <span class="scrub-mono">{{ run.rule.find }}</span> →
+                <span class="scrub-mono">{{ run.rule.replace ?: '(nothing)' }}</span>
+                · {{ run.rule.mode }}{{ run.rule.caseSensitive ? ', case sensitive' : ', any case' }}
+                · {{ run.rule.scope.describe() }}
+            </p>
+        {% endif %}
+
+        {% if run.note %}<p class="error">{{ run.note }}</p>{% endif %}
+    </div>
+
+    {% if canRevert and run.isRevertible() %}
+        <div class="scrub-panel">
+            <h2>{{ "Undo"|t('scrub') }}</h2>
+            <p>
+                {{ '{n, plural, =1{One value} other{# values}} can be put back exactly as {n, plural, =1{it was} other{they were}}. Anything edited since this run will be left alone and reported rather than overwritten.'|t('scrub', { n: outstanding }) }}
+            </p>
+            <form method="post" accept-charset="UTF-8">
+                {{ csrfInput() }}
+                {{ actionInput('scrub/runs/revert') }}
+                <input type="hidden" name="id" value="{{ run.id }}">
+                <button type="submit" class="btn submit">{{ "Undo this run"|t('scrub') }}</button>
+            </form>
+        </div>
+    {% elseif run.revertedByRunId %}
+        <div class="scrub-panel">
+            <p>{{ "This run was undone by"|t('scrub') }}
+                <a href="{{ url('scrub/runs/' ~ run.revertedByRunId) }}">{{ 'run #{id}'|t('scrub', { id: run.revertedByRunId }) }}</a>.</p>
+        </div>
+    {% endif %}
+
+    {% if run.report %}
+        <div class="scrub-panel">
+            <h2>{{ "What changed"|t('scrub') }}</h2>
+            {% include "scrub/replace/_report" with { report: run.report } only %}
+        </div>
+    {% endif %}
+{% endblock %}

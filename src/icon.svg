@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 193 193" width="193" height="193" role="img" aria-label="Scrub">
+    <title>Scrub</title>
+    <defs>
+        <clipPath id="scrub-plate">
+            <rect x="0" y="0" width="193" height="193" rx="35"/>
+        </clipPath>
+    </defs>
+    <g clip-path="url(#scrub-plate)">
+        <rect x="0" y="0" width="193" height="193" rx="35" fill="#1F6F6B"/>
+        <g transform="translate(15.5 15.5) scale(1.62)">
+<g transform="rotate(-12 50 50)">
+        <!-- The block. Solid rather than outlined: at 16px an outline fills in anyway, and solid
+             keeps the silhouette honest at both sizes. -->
+        <rect x="16" y="26" width="68" height="22" rx="10" fill="#FFFFFF"/>
+        <!-- Bristles. Four, evenly spaced — three reads as a fork, five as a comb. -->
+        <g stroke="#FFFFFF" stroke-width="7" stroke-linecap="round">
+            <path d="M29 50 v18"/>
+            <path d="M43 50 v18"/>
+            <path d="M57 50 v18"/>
+            <path d="M71 50 v18"/>
+        </g>
+    </g>
+    <!-- The streak. Full width, so the mark reads as *scrubbing* rather than as a hairbrush. -->
+    <rect x="8" y="82" width="84" height="9" rx="4.5" fill="#8FE3DE"/>
+        </g>
+    </g>
+</svg>

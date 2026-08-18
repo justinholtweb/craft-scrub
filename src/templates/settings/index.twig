@@ -1,0 +1,138 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = "Settings"|t('scrub') %}
+{% set selectedSubnavItem = 'settings' %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    {% include "scrub/_partials/style" %}
+
+    {{ actionInput('scrub/settings/save') }}
+    {{ redirectInput('scrub/settings') }}
+
+    <div class="scrub-panel">
+        <h2>{{ "How replacements are written"|t('scrub') }}</h2>
+
+        {{ forms.selectField({
+            label: "Write mode"|t('scrub'),
+            name: 'settings[writeMode]',
+            options: [
+                { label: "Save the element (recommended)"|t('scrub'), value: 'safe' },
+                { label: "Write the content column directly"|t('scrub'), value: 'fast' },
+            ],
+            value: settings.writeMode,
+            instructions: "Saving the element updates the search index, invalidates caches and fires the events other plugins rely on. Writing directly does none of that and queues a re-index instead — worth it only where the safe path would take hours."|t('scrub'),
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Create a revision for changed entries"|t('scrub'),
+            name: 'settings[createRevisions]',
+            on: settings.createRevisions,
+            instructions: "How an editor sees, in the interface they already use, that their page changed and what it changed from."|t('scrub'),
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Record every change so runs can be undone"|t('scrub'),
+            name: 'settings[recordUndo]',
+            on: settings.recordUndo,
+        }) }}
+
+        {{ forms.textField({
+            label: "Keep undo records for"|t('scrub'),
+            name: 'settings[undoRetentionDays]',
+            value: settings.undoRetentionDays,
+            size: 6,
+            suffix: "days"|t('scrub'),
+            instructions: "0 keeps them forever. Expired by Craft's garbage collection."|t('scrub'),
+        }) }}
+    </div>
+
+    <div class="scrub-panel">
+        <h2>{{ "Guardrails"|t('scrub') }}</h2>
+
+        <p class="scrub-meta">
+            {{ "Every run is previewed server-side before it writes anything — including runs started from the console and from a saved rule. That isn't optional, so there's no switch for it."|t('scrub') }}
+        </p>
+
+        {{ forms.textField({
+            label: "Most places one run may change"|t('scrub'),
+            name: 'settings[maxUnitsPerRun]',
+            value: settings.maxUnitsPerRun,
+            size: 8,
+            instructions: "0 removes the ceiling. Intended to make a mis-scoped rule fail loudly at the preview rather than quietly across 80,000 entries."|t('scrub'),
+        }) }}
+
+        {{ forms.textField({
+            label: "Hand runs to the queue above"|t('scrub'),
+            name: 'settings[queueThreshold]',
+            value: settings.queueThreshold,
+            size: 8,
+            suffix: "places"|t('scrub'),
+        }) }}
+
+        {{ forms.textField({
+            label: "Places listed in a preview"|t('scrub'),
+            name: 'settings[maxUnitsInPreview]',
+            value: settings.maxUnitsInPreview,
+            size: 8,
+        }) }}
+
+        {{ forms.textField({
+            label: "Matches shown per place"|t('scrub'),
+            name: 'settings[maxHitsPerUnit]',
+            value: settings.maxHitsPerUnit,
+            size: 8,
+        }) }}
+
+        {{ forms.multiselectField({
+            label: "Fields no rule may ever change"|t('scrub'),
+            name: 'settings[protectedFields]',
+            options: fieldOptions,
+            values: settings.protectedFields,
+            class: 'fullwidth',
+            instructions: "Enforced on every run, including from the console and on save."|t('scrub'),
+        }) }}
+
+        {% set sourceOptions = [] %}
+        {% for group, options in sourceGroups %}
+            {% set sourceOptions = sourceOptions|merge([{ optgroup: group }])|merge(options) %}
+        {% endfor %}
+
+        {{ forms.multiselectField({
+            label: "Sources no rule may ever change"|t('scrub'),
+            name: 'settings[protectedSources]',
+            options: sourceOptions,
+            values: settings.protectedSources,
+            class: 'fullwidth',
+        }) }}
+    </div>
+
+    <div class="scrub-panel">
+        <h2>{{ "Real-time rules"|t('scrub') }}{% if not isPro %}<span class="scrub-pro">Pro</span>{% endif %}</h2>
+
+        {{ forms.lightswitchField({
+            label: "Let rules rewrite the site's output"|t('scrub'),
+            name: 'settings[realtimeEnabled]',
+            on: settings.realtimeEnabled,
+            instructions: "A master switch, separate from the per-rule setting, so a whole environment can differ through config/scrub.php."|t('scrub'),
+        }) }}
+    </div>
+
+    <div class="scrub-panel">
+        <h2>{{ "Craft's own utility"|t('scrub') }}</h2>
+
+        {{ forms.lightswitchField({
+            label: "Hide Craft's Find and Replace utility"|t('scrub'),
+            name: 'settings[replaceCoreUtility]',
+            on: settings.replaceCoreUtility,
+            instructions: "Craft's utility rewrites drafts and revisions, can't be scoped, has no preview and leaves the search index describing content that no longer exists. Two find-and-replace tools side by side is worse than either. It's hidden, never removed — switching this off brings it straight back."|t('scrub'),
+        }) }}
+    </div>
+
+    <div class="scrub-panel">
+        <h2>{{ "Other database tables"|t('scrub') }}{% if not isPro %}<span class="scrub-pro">Pro</span>{% endif %}</h2>
+        <p class="scrub-meta">{{ "Form messages, redirects, SEO metadata — the content that isn't in elements."|t('scrub') }}</p>
+        <a class="btn" href="{{ url('scrub/settings/tables') }}">{{ "Configure tables"|t('scrub') }}</a>
+    </div>
+{% endblock %}

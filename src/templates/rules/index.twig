@@ -1,0 +1,61 @@
+{% extends "_layouts/cp" %}
+
+{% set title = "Rules"|t('scrub') %}
+{% set selectedSubnavItem = 'rules' %}
+
+{% block actionButton %}
+    <a href="{{ url('scrub/rules/new') }}" class="btn submit add icon">{{ "New rule"|t('scrub') }}</a>
+{% endblock %}
+
+{% block content %}
+    {% include "scrub/_partials/style" %}
+
+    {% if rules is empty %}
+        <div class="scrub-preview-empty">
+            <p>{{ "No saved rules yet."|t('scrub') }}</p>
+            <p>{{ "A saved rule can be run on demand, applied to content as it's saved, or used to rewrite the site's output without changing anything stored."|t('scrub') }}</p>
+        </div>
+    {% else %}
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ "Rule"|t('scrub') }}</th>
+                    <th>{{ "Replacement"|t('scrub') }}</th>
+                    <th class="thin">{{ "Applies"|t('scrub') }}</th>
+                    <th class="thin">{{ "Last run"|t('scrub') }}</th>
+                    <th class="thin"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in rules %}
+                    <tr>
+                        <td>
+                            <a href="{{ url('scrub/rules/' ~ rule.id) }}">{{ rule.name }}</a>
+                            {% if not rule.enabled %}<span class="light"> — {{ "disabled"|t('scrub') }}</span>{% endif %}
+                            {% if rule.handle %}<div class="light scrub-mono">{{ rule.handle }}</div>{% endif %}
+                        </td>
+                        <td class="scrub-mono">
+                            {{ rule.find }} → {{ rule.replace ?: '(nothing)' }}
+                        </td>
+                        <td class="thin">
+                            {% set applies = [] %}
+                            {% if rule.realtime %}{% set applies = applies|merge(["output"|t('scrub')]) %}{% endif %}
+                            {% if rule.onSave %}{% set applies = applies|merge(["on save"|t('scrub')]) %}{% endif %}
+                            {% if rule.cadence %}{% set applies = applies|merge([rule.cadence]) %}{% endif %}
+                            {{ applies ? applies|join(', ') : "on demand"|t('scrub') }}
+                        </td>
+                        <td class="thin">{{ rule.dateLastRun ? rule.dateLastRun|datetime('short') : '—' }}</td>
+                        <td class="thin">
+                            <form method="post" accept-charset="UTF-8">
+                                {{ csrfInput() }}
+                                {{ actionInput('scrub/rules/run') }}
+                                <input type="hidden" name="id" value="{{ rule.id }}">
+                                <button type="submit" class="btn small">{{ "Run"|t('scrub') }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

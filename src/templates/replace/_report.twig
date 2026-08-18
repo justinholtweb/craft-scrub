@@ -1,0 +1,92 @@
+{# The preview. Also the run report — the two are the same object, produced by the same code, which
+   is the whole reason the preview can be believed. #}
+
+{% if report.errors|length %}
+    <ul class="scrub-notices errors">
+        {% for error in report.errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+{% endif %}
+
+{% if report.warnings|length %}
+    <ul class="scrub-notices">
+        {% for warning in report.warnings %}<li>{{ warning }}</li>{% endfor %}
+    </ul>
+{% endif %}
+
+<div class="scrub-tally">
+    <div>
+        <div class="scrub-n">{{ report.hitCount|number_format }}</div>
+        <div class="scrub-l">{{ report.dryRun ? "matches"|t('scrub') : "replacements"|t('scrub') }}</div>
+    </div>
+    <div>
+        <div class="scrub-n">{{ report.unitCount|number_format }}</div>
+        <div class="scrub-l">{{ "places"|t('scrub') }}</div>
+    </div>
+    {% if not report.dryRun %}
+        <div>
+            <div class="scrub-n">{{ report.changed|number_format }}</div>
+            <div class="scrub-l">{{ "written"|t('scrub') }}</div>
+        </div>
+    {% endif %}
+    {% if report.failed %}
+        <div>
+            <div class="scrub-n error">{{ report.failed|number_format }}</div>
+            <div class="scrub-l">{{ "failed"|t('scrub') }}</div>
+        </div>
+    {% endif %}
+    <div>
+        <div class="scrub-n">{{ report.elapsed|number_format(2) }}s</div>
+        <div class="scrub-l">{{ "scanning {n} candidates"|t('scrub', { n: report.scanned|number_format }) }}</div>
+    </div>
+</div>
+
+{% if report.hitCount == 0 %}
+    <p class="scrub-preview-empty">{{ "Nothing matched."|t('scrub') }}</p>
+{% else %}
+    {% if report.byKind|length > 1 %}
+        <p class="scrub-meta">
+            {% for kind, n in report.byKind %}
+                {{ kind }} <strong>{{ n|number_format }}</strong>{{ not loop.last ? ' · ' }}
+            {% endfor %}
+        </p>
+    {% endif %}
+
+    {% for unit in report.units %}
+        <div class="scrub-unit">
+            <h3>
+                {% if unit.cpUrl() %}<a href="{{ unit.cpUrl() }}" target="_blank" rel="noopener">{{ unit.label() }}</a>
+                {% else %}{{ unit.label() }}{% endif %}
+                {% if unit.status == 'failed' %}<span class="error"> — {{ unit.error }}</span>{% endif %}
+                {% if unit.status == 'skipped' %}<span class="light"> — {{ "skipped"|t('scrub') }}</span>{% endif %}
+            </h3>
+            <div class="scrub-meta">
+                {{ unit.kind() }}
+                {%- if unit.siteName() %} · {{ unit.siteName() }}{% endif %}
+                · {{ '{n, plural, =1{one match} other{# matches}}'|t('scrub', { n: unit.count }) }}
+            </div>
+
+            {% for slot, data in unit.slots %}
+                <div class="scrub-slot">
+                    {{ data.label }}
+                    {%- if data.count > data.hits|length %}
+                        <span class="light">— {{ "showing {shown} of {total}"|t('scrub', { shown: data.hits|length, total: data.count }) }}</span>
+                    {% endif %}
+                </div>
+                {% for hit in data.hits %}
+                    <div class="scrub-hit">
+                        <span class="ctx">…{{ hit.before }}</span>
+                        <span class="scrub-old">{{ hit.matched }}</span>
+                        <span class="scrub-new">{{ hit.replacement }}</span>
+                        <span class="ctx">{{ hit.after }}…</span>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+    {% if report.truncated %}
+        <p class="scrub-meta" style="margin-top:16px">
+            {{ "Showing the first {n} places. The counts above are the whole run."|t('scrub', { n: report.units|length }) }}
+        </p>
+    {% endif %}
+{% endif %}

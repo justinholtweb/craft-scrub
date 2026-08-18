@@ -1,0 +1,82 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = "Database tables"|t('scrub') %}
+{% set selectedSubnavItem = 'settings' %}
+{% set crumbs = [{ label: "Settings"|t('scrub'), url: url('scrub/settings') }] %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    {% include "scrub/_partials/style" %}
+
+    {{ actionInput('scrub/settings/save') }}
+    {{ redirectInput('scrub/settings/tables') }}
+
+    <div class="scrub-panel">
+        <p>
+            {{ "Content isn't only in elements. The old company name is in a form's success message, in a redirect's destination, in the body of a system email — none of it reachable through the element system, and all of it found later by a customer."|t('scrub') }}
+        </p>
+        <p class="scrub-meta">
+            {{ "Nothing is enabled by default, every table is checked to exist before each scan, and the tables Craft manages itself are refused outright. JSON columns are decoded before searching and re-encoded after, so a replacement inside a settings blob stays valid JSON."|t('scrub') }}
+        </p>
+    </div>
+
+    {% set rows = [] %}
+    {% for table in tables %}
+        {% set rows = rows|merge([{
+            table: table.table,
+            primaryKey: table.primaryKey,
+            labelColumn: table.labelColumn,
+            columns: table.columns|join(', '),
+            jsonColumns: table.jsonColumns|join(', '),
+            label: table.label,
+        }]) %}
+    {% endfor %}
+
+    <div class="scrub-panel">
+        {{ forms.editableTableField({
+            label: "Tables Scrub may rewrite"|t('scrub'),
+            name: 'settings[tables]',
+            id: 'scrub-tables',
+            cols: {
+                table: { heading: "Table"|t('scrub'), type: 'singleline', code: true, width: '18%' },
+                columns: { heading: "Text columns"|t('scrub'), type: 'singleline', code: true, width: '20%' },
+                jsonColumns: { heading: "JSON columns"|t('scrub'), type: 'singleline', code: true, width: '18%' },
+                primaryKey: { heading: "Key"|t('scrub'), type: 'singleline', code: true, width: '10%' },
+                labelColumn: { heading: "Label column"|t('scrub'), type: 'singleline', code: true, width: '14%' },
+                label: { heading: "Called"|t('scrub'), type: 'singleline', width: '20%' },
+            },
+            rows: rows,
+            addRowLabel: "Add a table"|t('scrub'),
+            instructions: "No prefix and no {{% %}} — just the table name. Columns are comma separated."|t('scrub'),
+        }) }}
+    </div>
+
+    {% if suggestions|length %}
+        <div class="scrub-panel">
+            <h2>{{ "Detected on this site"|t('scrub') }}</h2>
+            <p class="scrub-meta">{{ "Suggestions, not defaults. Copy the ones you want into the table above."|t('scrub') }}</p>
+
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th>{{ "Table"|t('scrub') }}</th>
+                        <th>{{ "Text columns"|t('scrub') }}</th>
+                        <th>{{ "JSON columns"|t('scrub') }}</th>
+                        <th>{{ "Called"|t('scrub') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for suggestion in suggestions %}
+                        <tr>
+                            <td class="scrub-mono">{{ suggestion.table }}</td>
+                            <td class="scrub-mono">{{ suggestion.columns|join(', ') ?: '—' }}</td>
+                            <td class="scrub-mono">{{ suggestion.jsonColumns|join(', ') ?: '—' }}</td>
+                            <td>{{ suggestion.label }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}
