@@ -1,27 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 193 193" width="193" height="193" role="img" aria-label="Scrub">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Scrub">
     <title>Scrub</title>
-    <defs>
-        <clipPath id="scrub-plate">
-            <rect x="0" y="0" width="193" height="193" rx="35"/>
-        </clipPath>
-    </defs>
-    <g clip-path="url(#scrub-plate)">
-        <rect x="0" y="0" width="193" height="193" rx="35" fill="#1F6F6B"/>
-        <g transform="translate(15.5 15.5) scale(1.62)">
-<g transform="rotate(-12 50 50)">
-        <!-- The block. Solid rather than outlined: at 16px an outline fills in anyway, and solid
-             keeps the silhouette honest at both sizes. -->
-        <rect x="16" y="26" width="68" height="22" rx="10" fill="#FFFFFF"/>
-        <!-- Bristles. Four, evenly spaced — three reads as a fork, five as a comb. -->
-        <g stroke="#FFFFFF" stroke-width="7" stroke-linecap="round">
-            <path d="M29 50 v18"/>
-            <path d="M43 50 v18"/>
-            <path d="M57 50 v18"/>
-            <path d="M71 50 v18"/>
-        </g>
-    </g>
-    <!-- The streak. Full width, so the mark reads as *scrubbing* rather than as a hairbrush. -->
-    <rect x="8" y="82" width="84" height="9" rx="4.5" fill="#8FE3DE"/>
-        </g>
-    </g>
+    <!-- A scrubbing brush, drawn the same way in both files: icon.svg puts it in
+         white on the plate, icon-mask.svg drops the plate and switches the marks
+         to currentColor so the control panel can tint the silhouette. Keep the
+         two in step — they are one drawing, not two. -->
+    <rect width="100" height="100" rx="18.58" fill="#53A5A3"/>
+    <!-- The handle. Filled rather than stroked: the elbow sweeps wide on the
+         outside and turns tight on the inside, which one stroke width can't hold. -->
+    <path d="M42.32 26.11 L71.24 26.11 A3.98 3.98 0 0 1 71.24 34.07 L36.46 34.07 A2.81 2.81 0 0 0 33.83 35.93 L29.24 48.67 L21.45 48.67 L27.3 35.8 A16.5 16.5 0 0 1 42.32 26.11 Z" fill="#FFFFFF"/>
+    <!-- The head. A shallow trapezoid, wider at the base than the top — a plain
+         rectangle here reads as a label, not a block you could grip. -->
+    <path d="M16.27 49.76 Q17.7 45.58 22.12 45.58 L75.66 45.58 Q80.09 45.58 81.82 49.65 L82.78 51.9 Q84.51 55.97 80.09 55.97 L18.58 55.97 Q14.16 55.97 15.59 51.78 Z" fill="#FFFFFF"/>
+    <!-- Eleven bristles, fanning very slightly and fusing into one mass before
+         the tips. Fewer than nine reads as a comb; the fan is what makes it
+         bristles rather than teeth. -->
+    <path d="M18.76 59.07 Q19.91 58.19 21.06 59.07 L21.69 65.35 Q22.08 66.15 22.48 65.35 L24.71 59.07 Q25.86 58.19 27.01 59.07 L27.82 65.35 Q28.21 66.15 28.61 65.35 L30.66 59.07 Q31.81 58.19 32.96 59.07 L33.95 65.35 Q34.34 66.15 34.74 65.35 L36.62 59.07 Q37.77 58.19 38.92 59.07 L40.08 65.35 Q40.47 66.15 40.87 65.35 L42.57 59.07 Q43.72 58.19 44.87 59.07 L46.2 65.35 Q46.6 66.15 47.0 65.35 L48.52 59.07 Q49.67 58.19 50.82 59.07 L52.33 65.35 Q52.73 66.15 53.13 65.35 L54.47 59.07 Q55.62 58.19 56.77 59.07 L58.46 65.35 Q58.86 66.15 59.26 65.35 L60.42 59.07 Q61.57 58.19 62.72 59.07 L64.59 65.35 Q64.99 66.15 65.39 65.35 L66.37 59.07 Q67.52 58.19 68.67 59.07 L70.72 65.35 Q71.12 66.15 71.52 65.35 L72.32 59.07 Q73.47 58.19 74.62 59.07 L76.85 65.35 Q77.25 66.15 77.65 65.35 L78.27 59.07 Q79.42 58.19 80.58 59.07 L83.85 67.7 C84.51 72.57 69.91 73.89 49.67 73.89 C29.2 73.89 15.04 72.57 15.71 67.7 Z" fill="#FFFFFF"/>
 </svg>

@@ -67,7 +67,7 @@
         "handle": "scrub",
         "developer": "Justin Holt",
         "developerUrl": "https://justinholt.com",
-        "documentationUrl": "https://craft-scrub.com/docs",
+        "documentationUrl": "https://justinholt.com/plugins/craft-scrub/docs",
         "changelogUrl": "https://raw.githubusercontent.com/justinholtweb/craft-scrub/main/CHANGELOG.md",
         "class": "justinholtweb\\scrub\\Plugin"
     }

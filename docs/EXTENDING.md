@@ -1,3 +1,10 @@
+---
+title: Extending Scrub
+slug: extending
+order: 100
+summary: Adding your own targets, so anywhere else that holds text gets preview, undo and history for free.
+---
+
 # Extending Scrub
 
 Scrub's scanner knows nothing about entries, assets or database tables. It asks each *target* for
