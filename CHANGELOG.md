@@ -1,5 +1,21 @@
 # Release Notes for Scrub
 
+## Unreleased
+
+Landed after the `5.0.0` tag, which has not been published. Fold it into 5.0.0 by recreating that
+tag, or ship it as 5.0.1 — whichever, `composer.json`'s `version` has to match the tag's own tree
+or Packagist skips the tag while the webhook still answers 202.
+
+### Fixed
+
+- The Replace screen threw `Cannot assign string to property ...Scope::$elementTypes of type array`
+  on preview and on run. Craft's checkbox groups and multiselects post a hidden field under the
+  bare name so the key is always present, so a control with nothing ticked arrives as `''` rather
+  than as `[]`, and the typed `array` properties rejected it. Every list on the screen was
+  affected — element types, sources, fields, sites, element IDs and targets — and because "leave
+  every box unticked to search all of them" is the documented default, the ordinary path was the
+  broken one. The empty-slot filtering that already existed ran after the assignment that threw.
+
 ## 5.0.0 - 2026-08-18
 
 Initial release.

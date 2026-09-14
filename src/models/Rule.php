@@ -249,7 +249,10 @@ class Rule extends Model
         $rule = new self();
 
         foreach ($array as $key => $value) {
-            if ($key === 'scope' || !$rule->canSetProperty($key)) {
+            // `targets` and `realtimeUris` are typed `array` and are assigned properly just below,
+            // so skip them here: a checkbox group with nothing ticked posts '', and assigning that
+            // to an array property is a TypeError that would fire before the good assignment ran.
+            if (in_array($key, ['scope', 'targets', 'realtimeUris'], true) || !$rule->canSetProperty($key)) {
                 continue;
             }
 

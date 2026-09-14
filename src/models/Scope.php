@@ -233,19 +233,30 @@ class Scope extends Model
         ];
     }
 
+    /** The properties a checkbox group or multiselect posts into. */
+    private const LISTS = ['siteIds', 'elementTypes', 'sourceKeys', 'fieldHandles', 'elementIds'];
+
     public static function fromArray(?array $array): self
     {
         $scope = new self();
 
         foreach ($array ?? [] as $key => $value) {
-            if ($scope->canSetProperty($key)) {
-                $scope->$key = $value;
+            if (!$scope->canSetProperty($key)) {
+                continue;
             }
+
+            // Cast on the way in, not after. Craft's checkbox groups and multiselects emit a
+            // hidden field under the bare name so the key is always posted, so a control with
+            // nothing ticked arrives as '' rather than as []. These properties are typed `array`,
+            // and assigning '' to one is a TypeError — which fires here, before any amount of
+            // tidying further down could help. Leaving every box unticked is the documented way
+            // to say "search all of them", so this is the ordinary path, not an edge case.
+            $scope->$key = in_array($key, self::LISTS, true) ? (array)$value : $value;
         }
 
-        // Checkbox groups arrive with an empty string in slot zero, which would otherwise become a
-        // source key that matches nothing and silently empties the run.
-        foreach (['siteIds', 'elementTypes', 'sourceKeys', 'fieldHandles', 'elementIds'] as $list) {
+        // And then drop the empty slot that same hidden field leaves behind, which would
+        // otherwise become a source key that matches nothing and silently empties the run.
+        foreach (self::LISTS as $list) {
             $scope->$list = array_values(array_filter(
                 (array)$scope->$list,
                 static fn($value) => $value !== '' && $value !== null,
