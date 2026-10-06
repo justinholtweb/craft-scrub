@@ -259,7 +259,7 @@ class Scope extends Model
         foreach (self::LISTS as $list) {
             $scope->$list = array_values(array_filter(
                 (array)$scope->$list,
-                static fn($value) => $value !== '' && $value !== null,
+                static fn($value) => $value !== '' && $value !== null, // @phpstan-ignore notIdentical.alwaysTrue (raw input can hold nulls the property types don't admit)
             ));
         }
 

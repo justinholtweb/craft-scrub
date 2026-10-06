@@ -1,10 +1,11 @@
 # Release Notes for Scrub
 
-## Unreleased
+## 5.0.1 - 2026-10-06
 
-Landed after the `5.0.0` tag, which has not been published. Fold it into 5.0.0 by recreating that
-tag, or ship it as 5.0.1 — whichever, `composer.json`'s `version` has to match the tag's own tree
-or Packagist skips the tag while the webhook still answers 202.
+> {warning} Rules that search database tables now need **Rewrite non-element database tables** to
+> save, edit, preview or run — **Manage saved rules** alone is no longer enough. Grant it to anyone
+> who maintains those rules. Previews and runs from the control panel also leave out elements the
+> person can't view, so a run started by an editor with limited access changes less than it did.
 
 ### Fixed
 
@@ -15,6 +16,26 @@ or Packagist skips the tag while the webhook still answers 202.
   affected — element types, sources, fields, sites, element IDs and targets — and because "leave
   every box unticked to search all of them" is the documented default, the ordinary path was the
   broken one. The empty-slot filtering that already existed ran after the assignment that threw.
+- Saving a database table in settings could fail the same way. The form posts each table's columns
+  and JSON columns as comma-separated text, and the typed `array` properties rejected it before the
+  existing split ran. The text is now split first.
+
+### Security
+
+- A saved rule could rewrite raw database tables for somebody without **Rewrite non-element
+  database tables**. Only the Replace screen's run checked that permission. Saving a rule only
+  needed **Manage saved rules**, and running it from the rules screen didn't check, so the rule
+  could be saved and then run, or left for its schedule to run as the site. Saving or running a
+  rule that targets database tables now needs the permission, and so does editing one that already
+  does, so the text of an admin's database rule can't be changed by someone who couldn't have
+  written it.
+- The preview showed matching snippets of content the viewer couldn't otherwise see: rows from
+  database tables, without the database permission, and elements outside the sections and volumes
+  they can view. A database preview now needs the permission. Elements the person can't view are
+  left out of the preview, with a note saying how many, and out of the run as well, so a run
+  changes exactly what its preview showed. A queued run carries who queued it, and fails rather
+  than run as the site if that user is gone. Console runs and scheduled rules still act as the
+  site.
 
 ## 5.0.0 - 2026-08-18
 

@@ -3,6 +3,7 @@
 namespace justinholtweb\scrub\queue;
 
 use Craft;
+use craft\elements\User;
 use craft\i18n\Translation;
 use craft\queue\BaseJob;
 use justinholtweb\scrub\models\Rule;
@@ -28,10 +29,28 @@ class ScrubJob extends BaseJob
     /** @var int The ledger row already opened for this run. */
     public int $runId = 0;
 
+    /**
+     * @var int|null Who queued it from the control panel. The run leaves out what they can't view,
+     * as their preview did. Null for the console and for scheduled rules, which act as the site.
+     */
+    public ?int $userId = null;
+
     public function execute($queue): void
     {
         $plugin = Plugin::getInstance();
         $rule = Rule::fromArray($this->rule);
+
+        $viewer = null;
+        if ($this->userId !== null) {
+            $viewer = User::find()->id($this->userId)->status(null)->one();
+
+            // Never fall back to running as the site: that would change what they couldn't see.
+            if ($viewer === null) {
+                $plugin->runs->fail($this->runId, Craft::t('scrub', 'The user who queued this run no longer exists.'));
+
+                return;
+            }
+        }
 
         try {
             $report = $plugin->scrubber->apply($rule, $this->runId, function(int $done) use ($queue) {
@@ -41,7 +60,7 @@ class ScrubJob extends BaseJob
                 $this->setProgress($queue, 0, Craft::t('scrub', '{n, plural, =1{One place} other{# places}} changed', [
                     'n' => $done,
                 ]));
-            });
+            }, $viewer);
 
             $plugin->runs->finish($this->runId, $report);
 

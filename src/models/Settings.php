@@ -145,6 +145,7 @@ class Settings extends Model
     {
         return array_map(
             static fn(array $table) => DatabaseTable::fromArray($table),
+            // @phpstan-ignore function.alreadyNarrowedType (config/scrub.php can hold anything)
             array_values(array_filter($this->tables, static fn($table) => is_array($table) && ($table['table'] ?? '') !== '')),
         );
     }

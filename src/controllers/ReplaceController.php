@@ -3,6 +3,7 @@
 namespace justinholtweb\scrub\controllers;
 
 use Craft;
+use craft\elements\User;
 use craft\helpers\Queue;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
@@ -74,7 +75,9 @@ class ReplaceController extends Controller
         $this->requireAcceptsJson();
 
         $rule = $this->rule();
-        $report = Plugin::getInstance()->scrubber->preview($rule);
+        // As the signed-in user: no database tables without that permission, and no snippets from
+        // elements they can't view.
+        $report = Plugin::getInstance()->scrubber->preview($rule, null, $this->viewer());
 
         return $this->asJson([
             'html' => $this->getView()->renderTemplate('scrub/replace/_report', [
@@ -105,7 +108,7 @@ class ReplaceController extends Controller
 
         // Previewed again here, server-side. The browser's copy is a suggestion; this is the check,
         // and it runs the same code the replacement will.
-        $report = $plugin->scrubber->preview($rule);
+        $report = $plugin->scrubber->preview($rule, null, $this->viewer());
 
         if (!$report->canRun()) {
             $this->setFailFlash($report->errors[0] ?? Craft::t('scrub', 'Nothing matched, so nothing was changed.'));
@@ -117,7 +120,7 @@ class ReplaceController extends Controller
         $runId = $plugin->runs->start($rule, $queued ? Run::SOURCE_QUEUE : Run::SOURCE_CP, false);
 
         if ($queued) {
-            Queue::push(new ScrubJob(['rule' => $rule->toArray(), 'runId' => $runId]));
+            Queue::push(new ScrubJob(['rule' => $rule->toArray(), 'runId' => $runId, 'userId' => $this->viewer()->id]));
 
             $this->setSuccessFlash(Craft::t('scrub', '{n, plural, =1{One place} other{# places}} queued for replacement.', [
                 'n' => $report->unitCount,
@@ -127,7 +130,7 @@ class ReplaceController extends Controller
         }
 
         try {
-            $result = $plugin->scrubber->apply($rule, $runId);
+            $result = $plugin->scrubber->apply($rule, $runId, null, $this->viewer());
             $plugin->runs->finish($runId, $result);
         } catch (Throwable $e) {
             $plugin->runs->fail($runId, $e->getMessage());
@@ -152,6 +155,14 @@ class ReplaceController extends Controller
         $threshold = Plugin::getInstance()->getSettings()->queueThreshold;
 
         return $threshold > 0 && $units >= $threshold;
+    }
+
+    private function viewer(): User
+    {
+        /** @var User $user */
+        $user = Craft::$app->getUser()->getIdentity();
+
+        return $user;
     }
 
     private function rule(): Rule

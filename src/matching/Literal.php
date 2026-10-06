@@ -109,7 +109,7 @@ final class Literal
         $runs[] = $run;
 
         usort($runs, static fn(string $a, string $b) => strlen($b) <=> strlen($a));
-        $longest = $runs[0] ?? '';
+        $longest = $runs[0];
 
         return strlen($longest) >= self::MIN_LENGTH ? $longest : null;
     }

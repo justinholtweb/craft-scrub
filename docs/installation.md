@@ -69,6 +69,12 @@ editor can be trusted to look without being trusted to write:
 - **Undo a run**
 - **Manage saved rules**
 
+Scrub works inside Craft's own permissions. A preview and a run from the control panel only reach
+elements the person can view. Anything else is left out of both, with a note saying how many. Raw
+database tables need **Rewrite non-element database tables** to preview, to run, and to save or
+edit a rule that targets them, because a saved rule can run on a schedule as the site. Console
+runs and scheduled rules aren't limited this way.
+
 ## First run
 
 Go to **Scrub → Replace**, type something you know appears in a handful of entries, and

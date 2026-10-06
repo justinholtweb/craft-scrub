@@ -29,7 +29,7 @@ class ScrubVariable
      */
     public function isEnabled(string $handle): bool
     {
-        return Plugin::getInstance()->rules->getByHandle($handle)?->enabled ?? false;
+        return Plugin::getInstance()->rules->getByHandle($handle)->enabled ?? false;
     }
 
     /**

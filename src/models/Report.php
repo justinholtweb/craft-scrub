@@ -28,6 +28,9 @@ class Report extends Model
     public int $changed = 0;
     public int $failed = 0;
 
+    /** Elements matched but left out because the person running it can't view them. */
+    public int $hidden = 0;
+
     public float $elapsed = 0.0;
     public bool $dryRun = true;
 
@@ -97,6 +100,7 @@ class Report extends Model
             'scanned' => $this->scanned,
             'changed' => $this->changed,
             'failed' => $this->failed,
+            'hidden' => $this->hidden,
             'elapsed' => round($this->elapsed, 3),
             'dryRun' => $this->dryRun,
             'truncated' => $this->truncated,

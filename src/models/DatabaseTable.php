@@ -157,13 +157,19 @@ class DatabaseTable extends Model
 
         foreach ($array as $key => $value) {
             if ($table->canSetProperty($key)) {
+                // The settings form posts the column lists as comma-separated strings, and these
+                // properties are typed `array`, so they have to be split before they're assigned.
+                if (in_array($key, ['columns', 'jsonColumns'], true) && !is_array($value)) {
+                    $value = preg_split('~[\s,]+~', (string)$value) ?: [];
+                }
+
                 $table->$key = $value;
             }
         }
 
         foreach (['columns', 'jsonColumns'] as $list) {
             $table->$list = array_values(array_filter(
-                is_array($table->$list) ? $table->$list : (preg_split('~[\s,]+~', (string)$table->$list) ?: []),
+                $table->$list,
                 static fn($column) => trim((string)$column) !== '',
             ));
         }

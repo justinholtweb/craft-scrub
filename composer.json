@@ -2,7 +2,7 @@
     "name": "justinholtweb/craft-scrub",
     "description": "Find and replace text across a Craft site with a preview you can trust, scoping that stops at the content you meant, and an undo. Plus real-time rules that rewrite output without touching the database.",
     "type": "craft-plugin",
-    "version": "5.0.0",
+    "version": "5.0.1",
     "keywords": [
         "craft",
         "cms",
@@ -40,7 +40,8 @@
     "require-dev": {
         "craftcms/ecs": "dev-main",
         "craftcms/phpstan": "dev-main",
-        "phpunit/phpunit": "^10.5"
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.12 || ^2.2"
     },
     "autoload": {
         "psr-4": {

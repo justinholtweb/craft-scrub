@@ -130,7 +130,12 @@
 
         {% set targetOptions = [] %}
         {% for handle, target in targets %}
-            {% set targetOptions = targetOptions|merge([{ label: target.label(), value: handle }]) %}
+            {# Database tables need their own permission, to save a rule as much as to run one. #}
+            {% set targetOptions = targetOptions|merge([{
+                label: target.label(),
+                value: handle,
+                disabled: handle == 'database' and not currentUser.can('scrub:database'),
+            }]) %}
         {% endfor %}
 
         {{ forms.checkboxGroupField({

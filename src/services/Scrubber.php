@@ -4,6 +4,8 @@ namespace justinholtweb\scrub\services;
 
 use Craft;
 use craft\base\Component;
+use craft\base\ElementInterface;
+use craft\elements\User;
 use craft\helpers\Db;
 use craft\helpers\Json;
 use InvalidArgumentException;
@@ -49,9 +51,9 @@ class Scrubber extends Component
     /**
      * Finds everything the rule would change, and changes nothing.
      */
-    public function preview(Rule $rule, ?int $cap = null): Report
+    public function preview(Rule $rule, ?int $cap = null, ?User $viewer = null): Report
     {
-        return $this->scan($rule, true, null, null, $cap);
+        return $this->scan($rule, true, null, null, $cap, $viewer);
     }
 
     /**
@@ -61,20 +63,29 @@ class Scrubber extends Component
      *                        recorded and nothing can be reverted — which is why every caller in the
      *                        plugin passes one.
      * @param callable|null $progress Called as `fn(int $done, int $total)`, for the queue job's bar.
+     * @param User|null $viewer Whose run this is. See {@see scan()}.
      */
-    public function apply(Rule $rule, ?int $runId = null, ?callable $progress = null): Report
+    public function apply(Rule $rule, ?int $runId = null, ?callable $progress = null, ?User $viewer = null): Report
     {
-        return $this->scan($rule, false, $runId, $progress);
+        return $this->scan($rule, false, $runId, $progress, null, $viewer);
     }
 
     // -----------------------------------------------------------------------------------------
 
+    /**
+     * @param User|null $viewer The person in the control panel this scan is for. With one, a
+     * database target needs the database permission, and elements they can't view are left out —
+     * of the preview, which would otherwise show them snippets of content they can't read, and of
+     * the run, so that it changes exactly what the preview showed. Null for the console and for
+     * scheduled rules, which act as the site.
+     */
     private function scan(
         Rule $rule,
         bool $dryRun,
         ?int $runId = null,
         ?callable $progress = null,
         ?int $cap = null,
+        ?User $viewer = null,
     ): Report {
         $settings = Plugin::getInstance()->getSettings();
         $started = microtime(true);
@@ -87,7 +98,7 @@ class Scrubber extends Component
 
         // Checks that can fail before anything is read. Cheap, and they turn "the run did nothing"
         // into a sentence explaining why.
-        foreach ($this->objections($rule) as $objection) {
+        foreach ($this->objections($rule, $viewer) as $objection) {
             $report->errors[] = $objection;
         }
 
@@ -135,6 +146,18 @@ class Scrubber extends Component
                     }
                 }
 
+                // Checked once something matched, so only matches are counted as left out — and before
+                // anything about the unit reaches the report, even a failure, which names it.
+                if (($newValues !== [] || $unitReport->error !== null) && $viewer !== null
+                    && $unit->subject instanceof ElementInterface
+                    && !Craft::$app->getElements()->canView($unit->subject, $viewer)) {
+                    if ($newValues !== []) {
+                        $report->hidden++;
+                    }
+
+                    continue;
+                }
+
                 if ($newValues === []) {
                     if ($unitReport->error !== null) {
                         $report->failed++;
@@ -173,6 +196,12 @@ class Scrubber extends Component
 
         if ($changes !== []) {
             $this->recordChanges($changes);
+        }
+
+        if ($report->hidden > 0) {
+            $report->warnings[] = Craft::t('scrub', '{n, plural, =1{One element} other{# elements}} you can’t view {n, plural, =1{was} other{were}} left out.', [
+                'n' => $report->hidden,
+            ]);
         }
 
         $report->elapsed = microtime(true) - $started;
@@ -273,9 +302,15 @@ class Scrubber extends Component
      *
      * @return string[]
      */
-    private function objections(Rule $rule): array
+    private function objections(Rule $rule, ?User $viewer = null): array
     {
         $objections = [];
+
+        // Raw tables have no per-row permissions, so reading or writing them is a permission of its
+        // own — for the preview as much as the run, because the preview shows what it finds.
+        if ($viewer !== null && in_array('database', $rule->targets, true) && !$viewer->can(Plugin::PERMISSION_DATABASE)) {
+            $objections[] = Craft::t('scrub', 'You don’t have permission to search database tables.');
+        }
 
         if (trim($rule->find) === '') {
             $objections[] = Craft::t('scrub', 'There is nothing to find.');

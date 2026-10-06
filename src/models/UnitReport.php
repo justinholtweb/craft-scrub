@@ -25,7 +25,7 @@ class UnitReport
     public ?string $error = null;
 
     /**
-     * @param array{target: string, ref: string, kind: string, label: string, cpUrl: string|null, siteName: string|null} $identity
+     * @param array{target?: string, ref?: string, kind?: string, label?: string, cpUrl?: string|null, siteName?: string|null} $identity
      */
     public function __construct(public array $identity)
     {

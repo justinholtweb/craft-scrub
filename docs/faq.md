@@ -108,6 +108,10 @@ Whoever you grant it to. Previewing and running are separate permissions on purp
 editor can be trusted to look without being trusted to write. Undo, managing rules and
 rewriting database tables are three more.
 
+And it never reaches past Craft's own permissions. In the control panel, a preview and a run
+only touch elements that person can view. Database tables need their own permission to preview
+or run, and to save or edit a rule that targets them.
+
 ## Does it work on multi-site installs?
 
 Yes, and site is one of the scope filters, so a rename that should only apply to one site

@@ -128,6 +128,7 @@ final class Matcher
      * Replaces every match in the subject.
      *
      * @param int|null $count Set to the number of replacements made.
+     * @param-out int $count
      */
     public function replace(string $subject, ?int &$count = null): string
     {

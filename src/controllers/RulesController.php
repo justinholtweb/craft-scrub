@@ -78,6 +78,7 @@ class RulesController extends Controller
 
         $plugin = Plugin::getInstance();
         $rule = Rule::fromArray($this->request->getBodyParam('rule', []));
+        $this->requireDatabaseAccessFor($rule);
 
         if (!$plugin->rules->save($rule)) {
             $this->setFailFlash(Craft::t('scrub', 'Couldn’t save the rule.'));
@@ -124,6 +125,23 @@ class RulesController extends Controller
     }
 
     /**
+     * Rules that touch raw database tables need the database permission — to save, and to run.
+     *
+     * Saving counts as much as running: a saved rule can run on a schedule, as the site, so a user
+     * with "Manage rules" alone could otherwise save one (or change the text of an admin's) and
+     * let the schedule rewrite the tables for them. The rule as it is stored counts too, so a
+     * database rule can't be edited by somebody who couldn't have created it.
+     */
+    private function requireDatabaseAccessFor(Rule $rule): void
+    {
+        $stored = $rule->id !== null ? Plugin::getInstance()->rules->getById($rule->id) : null;
+
+        if (in_array('database', $rule->targets, true) || in_array('database', $stored->targets ?? [], true)) {
+            $this->requirePermission(Plugin::PERMISSION_DATABASE);
+        }
+    }
+
+    /**
      * Runs a saved rule now.
      *
      * Always previewed first and always queued above the threshold — a saved rule gets no more
@@ -141,7 +159,9 @@ class RulesController extends Controller
             throw new NotFoundHttpException('Rule not found.');
         }
 
-        $report = $plugin->scrubber->preview($rule);
+        $this->requireDatabaseAccessFor($rule);
+        $viewer = Craft::$app->getUser()->getIdentity();
+        $report = $plugin->scrubber->preview($rule, null, $viewer);
 
         if (!$report->canRun()) {
             $this->setFailFlash($report->errors[0] ?? Craft::t('scrub', 'Nothing matched, so nothing was changed.'));
@@ -154,12 +174,12 @@ class RulesController extends Controller
         $runId = $plugin->runs->start($rule, $queued ? Run::SOURCE_QUEUE : Run::SOURCE_CP, false);
 
         if ($queued) {
-            Queue::push(new ScrubJob(['rule' => $rule->toArray(), 'runId' => $runId]));
+            Queue::push(new ScrubJob(['rule' => $rule->toArray(), 'runId' => $runId, 'userId' => $viewer->id]));
             $this->setSuccessFlash(Craft::t('scrub', '{n, plural, =1{One place} other{# places}} queued for replacement.', [
                 'n' => $report->unitCount,
             ]));
         } else {
-            $plugin->runs->finish($runId, $plugin->scrubber->apply($rule, $runId));
+            $plugin->runs->finish($runId, $plugin->scrubber->apply($rule, $runId, null, $viewer));
             $plugin->rules->markRun($rule);
             $this->setSuccessFlash(Craft::t('scrub', 'Rule run.'));
         }

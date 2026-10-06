@@ -89,7 +89,9 @@ named rule.
 - Fields and sources that no rule may ever touch, enforced on every run wherever it came from.
 - Runs above a threshold go to the queue rather than timing out halfway through.
 - Replacing is a separate permission from previewing. Undoing, managing rules and writing to
-  non-element tables are separate again.
+  non-element tables are separate again. Previews and runs from the control panel only reach
+  elements the person can view, and anything touching database tables, including saving a rule
+  that does, needs that permission.
 - Everything is recorded — in a run ledger, and in `storage/logs/scrub.log`.
 
 ## Console

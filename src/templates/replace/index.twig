@@ -81,9 +81,11 @@
 
             {% set targetOptions = [] %}
             {% for handle, target in targets %}
+                {# Database tables need their own permission, to preview as much as to run. #}
                 {% set targetOptions = targetOptions|merge([{
                     label: target.label(),
                     value: handle,
+                    disabled: handle == 'database' and not currentUser.can('scrub:database'),
                 }]) %}
             {% endfor %}
 

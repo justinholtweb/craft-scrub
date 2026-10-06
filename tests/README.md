@@ -38,3 +38,20 @@ Anything that reads or writes an element needs a real site, and is exercised aga
   names, `href`s, attributes, `<script>` or `<style>`.
 - An on-save rule corrects content as it is saved, and does not fire for revisions.
 - The database target rewrites a configured table and refuses the tables Craft manages itself.
+
+## Security
+
+```bash
+docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-scrub/tests/integration/security.php
+```
+
+11 checks, over HTTP against the harness:
+- database targets need **Rewrite non-element database tables** to preview, save, edit or run;
+- previews and runs leave out elements the person can't view;
+- a queued run carries its user, and fails if that user is gone.
+
+It builds two throwaway sections and removes them in a fresh PHP process. Its fixture entry type
+has a title field in its layout: Craft 5 derives "has a title" from the layout, and without one
+every title is null and there's nothing to search. The editor it creates has `editSite` on every
+site, because in a multi-site install viewing an entry needs the site too.
+
